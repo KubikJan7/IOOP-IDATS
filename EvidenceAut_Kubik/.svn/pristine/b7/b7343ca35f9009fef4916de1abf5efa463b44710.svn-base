@@ -1,0 +1,46 @@
+package gui;
+
+import java.util.Arrays;
+import javafx.collections.FXCollections;
+import javafx.event.ActionEvent;
+import javafx.event.EventHandler;
+import javafx.scene.control.Button;
+import javafx.scene.control.ComboBox;
+import javafx.scene.control.ListView;
+import javafx.scene.layout.AnchorPane;
+
+public class vytvareniKomponent {
+
+    public static Button newBtn(
+            String text,
+            double rightAnchor, double bottomAnchor,
+            EventHandler<ActionEvent> handler) {
+        Button btn = new Button(text);
+        btn.setOnAction(handler);
+        AnchorPane.setLeftAnchor(btn, rightAnchor);
+        AnchorPane.setBottomAnchor(btn, bottomAnchor);
+        return btn;
+    }
+    
+    public static ListView newListView(double topAnchor, double leftAnchor,
+            double rightAnchor, double bottomAnchor){
+        ListView lv = new ListView();
+        AnchorPane.setTopAnchor(lv, topAnchor);
+        AnchorPane.setLeftAnchor(lv, leftAnchor);
+        AnchorPane.setRightAnchor(lv, rightAnchor);
+        AnchorPane.setBottomAnchor(lv, bottomAnchor);
+        return lv;
+    }
+    
+    public static ComboBox newComboBox(String text,
+            double rightAnchor, double bottomAnchor,
+            Enum[] seznamVyctu, EventHandler<ActionEvent> handler){
+        ComboBox comBox = new ComboBox(
+        FXCollections.observableList(Arrays.asList(seznamVyctu)));
+        comBox.setPromptText(text);
+        comBox.setOnAction(handler);
+        AnchorPane.setLeftAnchor(comBox, rightAnchor);
+        AnchorPane.setBottomAnchor(comBox, bottomAnchor);
+        return comBox;
+    }
+}

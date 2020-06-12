@@ -1,0 +1,27 @@
+package automobily;
+
+public class OsobniAutomobil extends Vozidlo {
+
+    private Barva barva;
+    private final int pocetDveri;
+
+    public OsobniAutomobil(Barva barva, int pocetDveri, String vyrobce, int SPZ, int maxRychlost, boolean vyhrivanaSedadla) {
+        super(VozidloEnum.OSOBNI_AUTOMOBIL, vyrobce, SPZ, maxRychlost, vyhrivanaSedadla);
+        this.barva = barva;
+        this.pocetDveri = pocetDveri;
+    }
+
+    public Barva getBarva() {
+        return barva;
+    }
+
+    public int getPocetDveri() {
+        return pocetDveri;
+    }
+
+    @Override
+    public String toString() {
+        return super.toString() + ", Barva: " + barva + ", Počet dveří: " + pocetDveri;
+    }
+
+}

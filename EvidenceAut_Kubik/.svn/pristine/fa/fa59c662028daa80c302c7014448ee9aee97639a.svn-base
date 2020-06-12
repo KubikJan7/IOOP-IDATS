@@ -1,0 +1,106 @@
+package gui;
+
+import automobily.Barva;
+import automobily.Dodavka;
+import automobily.NakladniAutomobil;
+import automobily.OsobniAutomobil;
+import automobily.Vozidlo;
+import automobily.VozidloEnum;
+import javafx.application.Application;
+import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
+import javafx.event.ActionEvent;
+import javafx.event.EventHandler;
+import javafx.scene.Node;
+import javafx.scene.Scene;
+import javafx.scene.control.ListView;
+import javafx.scene.layout.AnchorPane;
+import javafx.stage.Stage;
+import kolekce.ISeznam;
+import kolekce.KolekceException;
+
+public class EvidenceAutomobilu extends Application {
+ObservableList<Vozidlo> observableList = FXCollections.observableArrayList();
+    ListView list = new ListView();
+
+    private class Seznam {
+
+        private final ISeznam<Vozidlo> seznam;
+        private final int VELIKOST = 40;
+
+        public Seznam() throws KolekceException {
+            this.seznam = SeznamVozidel.getInstance(VELIKOST);
+        }
+    }
+
+    @Override
+    public void start(Stage primaryStage) throws KolekceException {
+        AnchorPane root = new AnchorPane();
+        ObservableList<Node> children = root.getChildren();
+        Scene scene = new Scene(root, 820, 600);
+        primaryStage.setTitle("Evidence Vozidel");
+        primaryStage.setScene(scene);
+
+        children.add(vytvareniKomponent.newBtn(
+                "Test", 10, 15, runTestData()));
+        children.add(vytvareniKomponent.newComboBox(
+                "Nový", 66, 15, VozidloEnum.values(), null));
+        children.add(vytvareniKomponent.newBtn(
+                "Zrušit", 256, 15, null));
+        children.add(vytvareniKomponent.newBtn(
+                "Změnit", 321, 15, null));
+        children.add(vytvareniKomponent.newComboBox(
+                "Filtr", 396, 15, VozidloEnum.values(), null));
+        children.add(vytvareniKomponent.newBtn(
+                "Zrus filtraci", 586, 15, null));
+        children.add(vytvareniKomponent.newBtn(
+                "Uloz", 686, 15, null));
+        children.add(vytvareniKomponent.newBtn(
+                "Obnov", 743, 15, null));
+
+        list = vytvareniKomponent.newListView(0.0, 10.0, 10.0, 60.0);
+        AnchorPane.setTopAnchor(list, 0.0);
+        AnchorPane.setLeftAnchor(list, 10.0);
+        AnchorPane.setRightAnchor(list, 10.0);
+        AnchorPane.setBottomAnchor(list, 60.0);
+        /*list.prefWidthProperty().bind(root.widthProperty());
+        list.prefHeightProperty().bind(root.heightProperty());*/
+        children.add(list);
+        primaryStage.show();
+
+        // primaryStage.setResizable(false);
+    }
+
+    public EventHandler<ActionEvent> runTestData() throws KolekceException {
+        Seznam seznam = new Seznam();
+        return event -> {
+            try {
+                seznam.seznam.zrus();
+                seznam.seznam.pridej(new OsobniAutomobil(Barva.MODRA, 3, "Citroen", 524855697, 150, false));
+                seznam.seznam.pridej(new NakladniAutomobil(80,20000, "Mercedes", 45654, 110, true));
+                seznam.seznam.pridej(new Dodavka(1250, 100, "Renault", 4587654, 130, true));
+                obnovZobrazeniSeznamu();
+
+            } catch (Exception ex) {
+
+            }
+        };
+
+    }
+
+    private void obnovZobrazeniSeznamu() throws KolekceException{
+        Seznam seznam = new Seznam();
+        observableList.clear();
+        seznam.seznam.stream()
+                        .filter((t) -> t != null)
+                        .forEach(t -> observableList.add(t));
+        list.setItems(observableList);
+    }
+    /**
+     * @param args the command line arguments
+     */
+    public static void main(String[] args) {
+        launch(args);
+    }
+
+}

@@ -1,0 +1,212 @@
+package gui;
+
+import automobily.Barva;
+import automobily.Dodavka;
+import automobily.NakladniAutomobil;
+import automobily.OsobniAutomobil;
+import automobily.Vozidlo;
+import automobily.VozidloEnum;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
+import java.util.function.Predicate;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import javafx.application.Application;
+import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
+import javafx.event.ActionEvent;
+import javafx.event.EventHandler;
+import javafx.scene.Node;
+import javafx.scene.Scene;
+import javafx.scene.control.Alert;
+import javafx.scene.control.ComboBox;
+import javafx.scene.control.ListView;
+import javafx.scene.layout.AnchorPane;
+import javafx.stage.Stage;
+import kolekce.ISeznam;
+import kolekce.KolekceException;
+
+public class EvidenceAutomobilu extends Application {
+
+    private ComboBox comBoxNovy;
+    private ComboBox comBoxFiltr;
+    ListView list = new ListView();
+
+    String jmenoSouboru = "evidence_automobilu.ser";
+
+    ObservableList<Vozidlo> observableList = FXCollections.observableArrayList();
+    private final int VELIKOST = 40;
+    ISeznam<Vozidlo> seznam = SeznamVozidel.getInstance(VELIKOST);
+    private Predicate<Vozidlo> filtr = (t) -> t != null;
+    private final Predicate<Vozidlo> filterOff = (t) -> t != null;
+
+    @Override
+    public void start(Stage primaryStage) throws KolekceException {
+        AnchorPane root = new AnchorPane();
+        ObservableList<Node> children = root.getChildren();
+        Scene scene = new Scene(root, 820, 600);
+        primaryStage.setTitle("Evidence Vozidel");
+        primaryStage.setScene(scene);
+
+        children.add(vytvareniKomponent.newBtn(
+                "Test", 10, 15, runTestData()));
+        children.add(comBoxNovy = vytvareniKomponent.newComboBox(
+                "Nový", 66, 15, VozidloEnum.values(), null));
+        children.add(vytvareniKomponent.newBtn(
+                "Zrušit", 256, 15, zrusVozidlaZeSeznamu()));
+        children.add(vytvareniKomponent.newBtn(
+                "Změnit", 321, 15, null));
+        children.add(comBoxFiltr = vytvareniKomponent.newComboBox(
+                "Filtr", 396, 15, VozidloEnum.values(), nastavFiltr()));
+        children.add(vytvareniKomponent.newBtn(
+                "Zrus filtraci", 586, 15, zrusFiltraci()));
+        children.add(vytvareniKomponent.newBtn(
+                "Uloz", 686, 15, handlerUloz));
+        children.add(vytvareniKomponent.newBtn(
+                "Obnov", 743, 15, handlerObnov));
+
+        list = vytvareniKomponent.newListView(0.0, 10.0, 10.0, 60.0);
+        AnchorPane.setTopAnchor(list, 0.0);
+        AnchorPane.setLeftAnchor(list, 10.0);
+        AnchorPane.setRightAnchor(list, 10.0);
+        AnchorPane.setBottomAnchor(list, 60.0);
+        /*list.prefWidthProperty().bind(root.widthProperty());
+        list.prefHeightProperty().bind(root.heightProperty());*/
+        children.add(list);
+        primaryStage.show();
+
+        // primaryStage.setResizable(false);
+    }
+
+    private EventHandler<ActionEvent> runTestData() {
+        return event -> {
+            try {
+                seznam.zrus();
+                seznam.pridej(new OsobniAutomobil(Barva.MODRA, 3,
+                        "Citroen", 524855697, 150, false));
+                seznam.pridej(new NakladniAutomobil(80, 20000,
+                        "Mercedes", 45654, 110, true));
+                seznam.pridej(new Dodavka(1250, 100,
+                        "Renault", 4587654, 130, true));
+                obnovZobrazeniSeznamu();
+            } catch (KolekceException ex) {
+                Logger.getLogger(EvidenceAutomobilu.class.getName()).log(Level.SEVERE, null, ex);
+            }
+        };
+    }
+
+    private EventHandler<ActionEvent> nastavFiltr() {
+        return event -> {
+            VozidloEnum typ;
+            typ = ((ComboBox<VozidloEnum>) event.getSource()).getValue();
+            if (typ == null) {
+                return;
+            }
+            switch (typ) {
+                case OSOBNI_AUTOMOBIL:
+                    filtr = (t) -> t.getTyp() == VozidloEnum.OSOBNI_AUTOMOBIL;
+                    break;
+                case NAKLADNI_AUTOMOBIL:
+                    filtr = (t) -> t.getTyp() == VozidloEnum.NAKLADNI_AUTOMOBIL;
+                    break;
+                case DODAVKA:
+                    filtr = (t) -> t.getTyp() == VozidloEnum.DODAVKA;
+                    break;
+                default:
+                    filtr = filterOff;
+            }
+            obnovZobrazeniSeznamu();
+        };
+
+    }
+
+    private EventHandler<ActionEvent> zrusFiltraci() {
+        return event -> {
+            comBoxFiltr.getSelectionModel().select(null);
+            filtr = filterOff;
+            obnovZobrazeniSeznamu();
+        };
+
+    }
+
+    private void obnovZobrazeniSeznamu() {
+        observableList.clear();
+        seznam.stream()
+                .filter(filtr)
+                .forEach(t -> observableList.add(t));
+        list.setItems(observableList);
+    }
+
+    private final EventHandler<ActionEvent> handlerUloz = event -> {
+        try {
+            uloz(jmenoSouboru);
+        } catch (IOException ex) {
+            new Alert(Alert.AlertType.ERROR,
+                    "Chyba v ukládání do souboru").showAndWait();
+        }
+
+    };
+
+    private final EventHandler<ActionEvent> handlerObnov = event -> {
+        try {
+            obnov(jmenoSouboru);
+            obnovZobrazeniSeznamu();
+        } catch (IOException ex) {
+            new Alert(Alert.AlertType.ERROR,
+                    "Chyba v obnově seznamu ze souboru").showAndWait();
+        }
+
+    };
+
+    private EventHandler<ActionEvent> zrusVozidlaZeSeznamu() {
+        return event -> {
+           seznam.odeber((Vozidlo)list.getSelectionModel().getSelectedItem());
+           obnovZobrazeniSeznamu();
+        };
+    }
+    
+    private void uloz(String jmenoSouboru) throws IOException {
+
+        FileOutputStream file = new FileOutputStream(jmenoSouboru);
+        ObjectOutputStream out = new ObjectOutputStream(file);
+
+        Object[] poleSeznam = seznam.toArray();
+        out.writeInt(seznam.getVelikost());
+        out.writeInt(seznam.getPocet());
+
+        for (Object vozidlo : poleSeznam) {
+            out.writeObject(vozidlo);
+        }
+
+        out.close();
+        file.close();
+    }
+
+    private void obnov(String jmenoSouboru) throws IOException {
+
+        FileInputStream file = new FileInputStream(jmenoSouboru);
+        ObjectInputStream in = new ObjectInputStream(file);
+
+        int velikost = in.readInt();
+        int pocet = in.readInt();
+
+        try {
+            for (int i = 0; i < pocet; i++) {
+                seznam.pridej((Vozidlo) in.readObject());
+            }
+        } catch (KolekceException | ClassNotFoundException ex) {
+            Logger.getLogger(EvidenceAutomobilu.class.getName()).log(Level.SEVERE, null, ex);
+        }
+
+        in.close();
+        file.close();
+    }
+
+    public static void main(String[] args) {
+        launch(args);
+    }
+
+}

@@ -1,0 +1,19 @@
+package gui;
+
+import automobily.Vozidlo;
+import kolekce.ISeznam;
+import kolekce.KolekceException;
+import kolekce.Seznam;
+
+public class SeznamVozidel {
+
+    private static ISeznam<Vozidlo> seznam;
+
+    public static ISeznam<Vozidlo> getInstance(int velikost) throws KolekceException {
+        if (seznam == null) {
+            seznam = new Seznam(velikost);
+        }
+        return seznam;
+    }
+
+}

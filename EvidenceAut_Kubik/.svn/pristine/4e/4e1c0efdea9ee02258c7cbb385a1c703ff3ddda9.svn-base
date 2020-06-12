@@ -1,0 +1,239 @@
+package gui;
+
+import kolekce.SeznamVozidel;
+import automobily.Dodavka;
+import automobily.NakladniAutomobil;
+import automobily.OsobniAutomobil;
+import automobily.Vozidlo;
+import automobily.VozidloEnum;
+import java.io.IOException;
+import java.util.Optional;
+import java.util.function.Predicate;
+import javafx.application.Application;
+import javafx.application.Platform;
+import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
+import javafx.event.ActionEvent;
+import javafx.event.EventHandler;
+import javafx.scene.Node;
+import javafx.scene.Scene;
+import javafx.scene.control.ButtonType;
+import javafx.scene.control.ComboBox;
+import javafx.scene.control.ListView;
+import javafx.scene.layout.AnchorPane;
+import javafx.stage.Stage;
+import kolekce.KolekceException;
+
+public class EvidenceAutomobilu extends Application {
+
+    private ComboBox<VozidloEnum> comBoxNovy;
+    private ComboBox<VozidloEnum> comBoxFiltr;
+    ListView<Vozidlo> list = new ListView<>();
+
+    String jmenoSouboru = "evidence_automobilu.ser";
+
+    ObservableList<Vozidlo> observableList = FXCollections.observableArrayList();
+    private final int VELIKOST = 40;
+    SeznamVozidel seznam = SeznamVozidel.getInstance(VELIKOST);
+    private Predicate<Vozidlo> filtr = (t) -> t != null;
+    private final Predicate<Vozidlo> filterOff = (t) -> t != null;
+    Stage dialog = null;
+
+    @Override
+    public void start(Stage primaryStage) throws KolekceException {
+        AnchorPane root = new AnchorPane();
+        ObservableList<Node> children = root.getChildren();
+        Scene scene = new Scene(root, 1120, 600);
+        primaryStage.setTitle("Evidence Vozidel");
+        primaryStage.setScene(scene);
+
+        int a = 130;
+        children.add(VytvareniKomponent.newBtn("Test", 10 + a, 15, LibraryGUI.runTestData(this)));
+        children.add(comBoxNovy = VytvareniKomponent.newComboBox(
+                "Nový", 66 + a, 15, VozidloEnum.values(), pridejNoveVozidlo()));
+        children.add(VytvareniKomponent.newBtn(
+                "Zrušit", 256 + a, 15, zrusVozidloZeSeznamu()));
+        children.add(VytvareniKomponent.newBtn(
+                "Změnit", 321 + a, 15, zmenVozidlaVSeznamu()));
+        children.add(comBoxFiltr = VytvareniKomponent.newComboBox(
+                "Filtr", 396 + a, 15, VozidloEnum.values(), nastavFiltr()));
+        children.add(VytvareniKomponent.newBtn(
+                "Zrus filtraci", 586 + a, 15, zrusFiltraci()));
+        children.add(VytvareniKomponent.newBtn(
+                "Uloz", 686 + a, 15, handlerUloz));
+        children.add(VytvareniKomponent.newBtn(
+                "Obnov", 743 + a, 15, handlerObnov));
+
+        list = VytvareniKomponent.newListView(0.0, 10.0, 10.0, 60.0);
+        AnchorPane.setTopAnchor(list, 0.0);
+        AnchorPane.setLeftAnchor(list, 10.0);
+        AnchorPane.setRightAnchor(list, 10.0);
+        AnchorPane.setBottomAnchor(list, 60.0);
+        /*list.prefWidthProperty().bind(root.widthProperty());
+        list.prefHeightProperty().bind(root.heightProperty());*/
+        children.add(list);
+        primaryStage.show();
+        primaryStage.setOnCloseRequest(e -> {
+            Optional<ButtonType> result = AlertHandler.confirmationAlert
+        ("Ukončení aplikace", null, "Opravdu si přejete ukončit tuto aplikaci?")
+                    .showAndWait();
+            if (result.get() == ButtonType.OK) {
+                System.exit(0);
+            } else {
+                e.consume();
+            }
+        });
+    }
+
+    private EventHandler<ActionEvent> nastavFiltr() {
+        return event -> {
+            VozidloEnum typ;
+            typ = comBoxFiltr.getSelectionModel().getSelectedItem();
+            if (typ == null) {
+                return;
+            }
+            switch (typ) {
+                case OSOBNI_AUTOMOBIL:
+                    filtr = (t) -> t.getTyp() == VozidloEnum.OSOBNI_AUTOMOBIL;
+                    break;
+                case NAKLADNI_AUTOMOBIL:
+                    filtr = (t) -> t.getTyp() == VozidloEnum.NAKLADNI_AUTOMOBIL;
+                    break;
+                case DODAVKA:
+                    filtr = (t) -> t.getTyp() == VozidloEnum.DODAVKA;
+                    break;
+                default:
+                    filtr = filterOff;
+            }
+            obnovZobrazeniSeznamu();
+        };
+
+    }
+
+    private EventHandler<ActionEvent> zrusFiltraci() {
+        return event -> {
+            comBoxFiltr.getSelectionModel().clearSelection();
+            filtr = filterOff;
+            obnovZobrazeniSeznamu();
+        };
+
+    }
+
+    protected void obnovZobrazeniSeznamu() {
+        observableList.clear();
+        seznam.stream()
+                .filter(filtr)
+                .forEach(t -> observableList.add(t));
+        list.setItems(observableList);
+    }
+
+    private final EventHandler<ActionEvent> handlerUloz = event -> {
+        try {
+            LibraryGUI.uloz(jmenoSouboru, this);
+        } catch (IOException ex) {
+            AlertHandler.errorAlert(null, "Chyba v ukládání seznamu ze souboru");
+        }
+
+    };
+
+    private final EventHandler<ActionEvent> handlerObnov = event -> {
+        try {
+            LibraryGUI.obnov(jmenoSouboru, this);
+            obnovZobrazeniSeznamu();
+        } catch (IOException ex) {
+            AlertHandler.errorAlert(null, "Chyba v obnově seznamu ze souboru");
+        }
+
+    };
+
+    private EventHandler<ActionEvent> zrusVozidloZeSeznamu() {
+        return event -> {
+            try {
+                seznam.odeber((Vozidlo) list.getSelectionModel().
+                        getSelectedItem());
+                obnovZobrazeniSeznamu();
+            } catch (NullPointerException ex) {
+                AlertHandler.informationAlert(null,
+                        "Ke smazání nebyla vybrána žádná položka");
+            }
+        };
+    }
+
+    private EventHandler<ActionEvent> pridejNoveVozidlo() {
+        return event -> {
+            Platform.runLater(() -> {
+                VozidloEnum typDialogu;
+                typDialogu = comBoxNovy.getSelectionModel().getSelectedItem();
+                if (typDialogu == null) {
+                    return;
+                }
+                switch (typDialogu) {
+                    case OSOBNI_AUTOMOBIL:
+                        dialog = DialogOsobniAutomobil.
+                                factoryDialogOsobniAutomobil(null, t -> {
+                                    seznam.pridej(t);
+                                    obnovZobrazeniSeznamu();
+                                });
+                        break;
+                    case NAKLADNI_AUTOMOBIL:
+                        dialog = DialogNakladniAutomobil.
+                                factoryDialogNakladniAutomobil(null, t -> {
+                                    seznam.pridej(t);
+                                    obnovZobrazeniSeznamu();
+                                });
+                        break;
+                    case DODAVKA:
+                        dialog = DialogDodavka.factoryDialogDodavka(null, t -> {
+                            seznam.pridej(t);
+                            obnovZobrazeniSeznamu();
+                        });
+                        break;
+                }
+                dialog.setResizable(false);
+                dialog.showAndWait();
+                comBoxNovy.getSelectionModel().clearSelection();
+            });
+        };
+
+    }
+
+    private EventHandler<ActionEvent> zmenVozidlaVSeznamu() {
+        return event -> {
+            try {
+                Vozidlo vybraneVozidlo = list.getSelectionModel().
+                        getSelectedItem();
+                VozidloEnum typDialogu = vybraneVozidlo.getTyp();
+                switch (typDialogu) {
+                    case OSOBNI_AUTOMOBIL:
+                        dialog = DialogOsobniAutomobil.
+                                factoryDialogOsobniAutomobil(()
+                                        -> (OsobniAutomobil) vybraneVozidlo,
+                                        t -> obnovZobrazeniSeznamu());
+                        break;
+                    case NAKLADNI_AUTOMOBIL:
+                        dialog = DialogNakladniAutomobil.
+                                factoryDialogNakladniAutomobil(()
+                                        -> (NakladniAutomobil) vybraneVozidlo,
+                                        t -> obnovZobrazeniSeznamu());
+                        break;
+                    case DODAVKA:
+                        dialog = DialogDodavka.factoryDialogDodavka(()
+                                -> (Dodavka) vybraneVozidlo,
+                                t -> obnovZobrazeniSeznamu());
+                        break;
+                }
+                dialog.setResizable(false);
+                dialog.showAndWait();
+            } catch (NullPointerException ex) {
+                AlertHandler.informationAlert(null,
+                        "K editaci nebyla vybrána žádná položka");
+            }
+
+        };
+    }
+
+    public static void main(String[] args) {
+        launch(args);
+    }
+
+}

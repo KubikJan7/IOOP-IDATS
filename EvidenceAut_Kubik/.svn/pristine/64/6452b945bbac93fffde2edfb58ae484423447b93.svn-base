@@ -1,0 +1,111 @@
+package gui;
+
+import automobily.Barva;
+import automobily.OsobniAutomobil;
+import java.util.function.Consumer;
+import java.util.function.Supplier;
+import javafx.geometry.Insets;
+import javafx.geometry.Pos;
+import javafx.scene.Scene;
+import javafx.scene.control.Button;
+import javafx.scene.control.CheckBox;
+import javafx.scene.control.ComboBox;
+import javafx.scene.control.Spinner;
+import javafx.scene.control.TextField;
+import javafx.scene.layout.GridPane;
+import javafx.scene.layout.VBox;
+import javafx.stage.Modality;
+import javafx.stage.Stage;
+import javafx.stage.StageStyle;
+
+public class DialogOsobniAutomobil extends Stage {
+
+    private final Consumer<OsobniAutomobil> vystupniOperace;
+    private TextField txVyrobce;
+    private TextField txSPZ;
+    private TextField txMaxRych;
+    private Spinner<Integer> spPocetDveri;
+    private CheckBox checkBoxVyhSed;
+    private ComboBox<Barva> comBoxBarva;
+    private final boolean edit;
+    private final OsobniAutomobil osobniAutomobil;
+
+    public static DialogOsobniAutomobil factoryDialogOsobniAutomobil(
+            Supplier<OsobniAutomobil> vstup, Consumer<OsobniAutomobil> vystup) {
+        return new DialogOsobniAutomobil(vstup, vystup);
+    }
+
+    private DialogOsobniAutomobil(Supplier<OsobniAutomobil> vstup,
+            Consumer<OsobniAutomobil> vystup) {
+        this.vystupniOperace = vystup;
+        edit = vstup != null;
+
+        osobniAutomobil = (edit) ? vstup.get() : new OsobniAutomobil(null, 0, null, null, 0, false);
+        setTitle("Dialog Osobní Automobil");
+        setWidth(350);
+        setHeight(350);
+        initStyle(StageStyle.UTILITY);
+        initModality(Modality.WINDOW_MODAL);
+        setScene(getScena());
+        if (edit) {
+            set();
+        }
+    }
+
+    private Scene getScena() throws IndexOutOfBoundsException {
+        VBox box = new VBox();
+        box.setAlignment(Pos.CENTER);
+        box.setSpacing(20);
+        GridPane grid = new GridPane();
+        grid.setAlignment(Pos.CENTER);
+        grid.setPadding(new Insets(10));
+        grid.setHgap(10);
+        grid.setVgap(10);
+        box.getChildren().addAll(grid);
+        int radek = 0;
+        txVyrobce = VytvareniKomponent.addRow(grid, "Výrobce:", radek++);
+        txSPZ = VytvareniKomponent.addRow(grid, "SPZ:", radek++);
+        txMaxRych = VytvareniKomponent.addRow(grid, "Max. rych. (km/h):", radek++);
+        checkBoxVyhSed = VytvareniKomponent.addRowCheckBox(grid, "Vyhřívaná sedadla", radek++);
+        comBoxBarva = VytvareniKomponent.addRowComboBox(grid, "Barva", radek++, Barva
+                .values());
+        spPocetDveri = VytvareniKomponent.addRowSpinner(grid, "Počet dveří", radek++, 1, 10);
+        Button buttonUloz = new Button("Uloz");
+        buttonUloz.setOnAction(e -> {
+            update();
+            vystupniOperace.accept(osobniAutomobil);
+            hide();
+        });
+        grid.add(buttonUloz, 0, ++radek);
+        return new Scene(box);
+    }
+
+    private void update() {
+        try {
+            osobniAutomobil.setBarva(comBoxBarva.getValue());
+            osobniAutomobil.setMaxRychlost(Integer.valueOf(txMaxRych.getText()));
+            osobniAutomobil.setMaVyhrivanaSedadla(checkBoxVyhSed.isSelected());
+            osobniAutomobil.setPocetDveri(spPocetDveri.getValue());
+            osobniAutomobil.setSPZ(txSPZ.getText());
+            osobniAutomobil.setVyrobce(txVyrobce.getText());
+        } catch (NumberFormatException ex) {
+            AlertHandler.informationAlert("Nesprávně zadaná hodnota",
+                    "Nově vytvořená položka získá nulové parametry,"
+                    + "editované položce zůstanou původní parametry.");
+        }
+    }
+
+    private void set() {
+        try {
+            comBoxBarva.setValue(osobniAutomobil.getBarva());
+            txMaxRych.setText(Integer.toString(osobniAutomobil.getMaxRychlost()));
+            checkBoxVyhSed.setSelected(osobniAutomobil.isMaVyhrivanaSedadla());
+            spPocetDveri.getValueFactory().setValue(osobniAutomobil.getPocetDveri());
+            txSPZ.setText(osobniAutomobil.getSPZ());
+            txVyrobce.setText(osobniAutomobil.getVyrobce());
+        } catch (NumberFormatException ex) {
+            AlertHandler.warningAlert(null,
+                    "Hodnota nebyla zadáná ve validním tvaru. ");
+        }
+    }
+}

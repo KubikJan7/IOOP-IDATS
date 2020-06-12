@@ -1,0 +1,70 @@
+package automobily;
+
+public abstract class Vozidlo {
+
+    private final VozidloEnum typ;
+    private final String vyrobce;
+    private final int SPZ;
+    private final int maxRychlost;
+    private final boolean maVyhrivanaSedadla;
+
+    public Vozidlo(VozidloEnum typ,String vyrobce, int SPZ, int maxRychlost, boolean vyhrivanaSedadla) {
+        this.typ = typ;
+        this.vyrobce = vyrobce;
+        this.SPZ = SPZ;
+        this.maxRychlost = maxRychlost;
+        this.maVyhrivanaSedadla = vyhrivanaSedadla;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj) {
+            return true;
+        }
+        if (obj == null) {
+            return false;
+        }
+        if (this.getClass() != obj.getClass()) {
+            return false;
+        }
+        final Vozidlo a = (Vozidlo) obj;
+        if (this.SPZ == a.SPZ) {
+            return true;
+        }
+        return false;
+
+    }
+
+    @Override
+    public int hashCode() {
+        int hash = 5;
+        hash = hash * 29 + SPZ ^ (SPZ >>> 32);
+        return hash;
+    }
+
+    public String getVyrobce() {
+        return vyrobce;
+    }
+
+    public int getSPZ() {
+        return SPZ;
+    }
+
+    public int getMaxRychlost() {
+        return maxRychlost;
+    }
+
+    public String isVyhrivanaSedadla() {
+        return maVyhrivanaSedadla ? "ano" :"ne";
+    }
+
+    public VozidloEnum getTyp() {
+        return typ;
+    }
+
+    @Override
+    public String toString() {
+        return typ + ", Výrobce: " + vyrobce + ", SPZ: " + SPZ + ", Maximální rychlost: " + maxRychlost + " km/h" + ", Vyhřívaná sedadla: " + isVyhrivanaSedadla();
+    }
+
+}

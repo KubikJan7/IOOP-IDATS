@@ -1,0 +1,62 @@
+package gui;
+
+import automobily.VozidloEnum;
+import javafx.application.Application;
+import javafx.beans.property.DoubleProperty;
+import javafx.collections.ObservableList;
+import javafx.scene.Node;
+import javafx.scene.Scene;
+import javafx.scene.control.ListView;
+import javafx.scene.layout.AnchorPane;
+import javafx.stage.Stage;
+
+public class EvidenceAutomobilu extends Application {
+
+    ListView list = new ListView();
+
+    @Override
+    public void start(Stage primaryStage) {
+        AnchorPane root = new AnchorPane();
+        ObservableList<Node> children = root.getChildren();
+        Scene scene = new Scene(root, 820, 600);
+        primaryStage.setTitle("Evidence Vozidel");
+        primaryStage.setScene(scene);
+
+        children.add(vytvareniKomponent.newBtn(
+                "Test", 10, 15, null));
+        children.add(vytvareniKomponent.newComboBox(
+                "Nový", 66, 15, VozidloEnum.values(), null));
+        children.add(vytvareniKomponent.newBtn(
+                "Zrušit", 256, 15, null));
+        children.add(vytvareniKomponent.newBtn(
+                "Změnit", 321, 15, null));
+        children.add(vytvareniKomponent.newComboBox(
+                "Filtr", 396, 15, VozidloEnum.values(), null));
+        children.add(vytvareniKomponent.newBtn(
+                "Zrus filtraci", 586, 15, null));
+        children.add(vytvareniKomponent.newBtn(
+                "Uloz", 686, 15, null));
+        children.add(vytvareniKomponent.newBtn(
+                "Obnov", 743, 15, null));
+
+        list = vytvareniKomponent.newListView(0.0, 10.0, 10.0, 60.0);
+        AnchorPane.setTopAnchor(list, 0.0);
+        AnchorPane.setLeftAnchor(list, 10.0);
+        AnchorPane.setRightAnchor(list, 10.0);
+        AnchorPane.setBottomAnchor(list, 60.0);
+        /*list.prefWidthProperty().bind(root.widthProperty());
+        list.prefHeightProperty().bind(root.heightProperty());*/
+        children.add(list);
+        primaryStage.show();
+        
+       // primaryStage.setResizable(false);
+    }
+
+    /**
+     * @param args the command line arguments
+     */
+    public static void main(String[] args) {
+        launch(args);
+    }
+
+}

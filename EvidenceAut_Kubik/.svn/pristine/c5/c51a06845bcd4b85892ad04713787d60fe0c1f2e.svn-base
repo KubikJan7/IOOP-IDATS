@@ -1,0 +1,109 @@
+package gui;
+
+import automobily.NakladniAutomobil;
+import java.util.function.Consumer;
+import java.util.function.Supplier;
+import javafx.geometry.Insets;
+import javafx.geometry.Pos;
+import javafx.scene.Scene;
+import javafx.scene.control.Button;
+import javafx.scene.control.CheckBox;
+import javafx.scene.control.Spinner;
+import javafx.scene.control.TextField;
+import javafx.scene.layout.GridPane;
+import javafx.scene.layout.VBox;
+import javafx.stage.Modality;
+import javafx.stage.Stage;
+import javafx.stage.StageStyle;
+
+public class DialogNakladniAutomobil extends Stage {
+
+    private final Consumer<NakladniAutomobil> vystupniOperace;
+    private TextField txVyrobce;
+    private TextField txSPZ;
+    private TextField txMaxRych;
+    private Spinner<Integer> spPocetPaletovýchmíst;
+    private CheckBox checkBoxVyhSed;
+    private TextField txVykon;
+    private boolean edit;
+    private NakladniAutomobil nakladniAutomobil;
+
+    public static DialogNakladniAutomobil factoryDialogNakladniAutomobil(
+            Supplier<NakladniAutomobil> vstup, Consumer<NakladniAutomobil> vystup) {
+        return new DialogNakladniAutomobil(vstup, vystup);
+    }
+
+    private DialogNakladniAutomobil(Supplier<NakladniAutomobil> vstup,
+            Consumer<NakladniAutomobil> vystup) {
+        this.vystupniOperace = vystup;
+        edit = vstup != null;
+
+        nakladniAutomobil = (edit) ? vstup.get() : new NakladniAutomobil(0, 0, null, null, 0, false);
+        setTitle("Dialog Nakladni Automobil");
+        setWidth(350);
+        setHeight(350);
+        initStyle(StageStyle.UTILITY);
+        initModality(Modality.WINDOW_MODAL);
+        setScene(getScena());
+        if (edit) {
+            set();
+        }
+    }
+
+    private Scene getScena() {
+        VBox box = new VBox();
+        box.setAlignment(Pos.CENTER);
+        box.setSpacing(10);
+        GridPane grid = new GridPane();
+        grid.setAlignment(Pos.CENTER);
+        grid.setPadding(new Insets(20));
+        grid.setHgap(10);
+        grid.setVgap(10);
+        box.getChildren().addAll(grid);
+        int radek = 0;
+
+        txVyrobce = VytvareniKomponent.addRow(grid, "Výrobce:", radek++);
+        txSPZ = VytvareniKomponent.addRow(grid, "SPZ:", radek++);
+        txMaxRych = VytvareniKomponent.addRow(grid, "Max. rych. (km/h):", radek++);
+        checkBoxVyhSed = VytvareniKomponent.addRowCheckBox(grid, "Vyhřívaná sedadla:", radek++);
+        txVykon = VytvareniKomponent.addRow(grid, "Výkon (kW):", radek++);
+        spPocetPaletovýchmíst = VytvareniKomponent.addRowSpinner(grid, "Počet paletových míst:", radek++, 50, 200);
+        Button buttonUloz = new Button("Ulož");
+        buttonUloz.setOnAction(e -> {
+            update();
+            vystupniOperace.accept(nakladniAutomobil);
+            hide();
+        });
+        grid.add(buttonUloz, 0, ++radek);
+        return new Scene(box);
+    }
+
+    private void update() {
+        try {
+            nakladniAutomobil.setVykon(Integer.valueOf(txVykon.getText()));
+            nakladniAutomobil.setMaxRychlost(Integer.valueOf(txMaxRych.getText()));
+            nakladniAutomobil.setMaVyhrivanaSedadla(checkBoxVyhSed.isSelected());
+            nakladniAutomobil.setPocetPaletovychMist(spPocetPaletovýchmíst.getValue());
+            nakladniAutomobil.setSPZ(txSPZ.getText());
+            nakladniAutomobil.setVyrobce(txVyrobce.getText());
+        } catch (NumberFormatException ex) {
+            AlertHandler.informationAlert("Nesprávně zadaná hodnota",
+                    "Nově vytvořená položka získá nulové parametry,"
+                    + "editované položce zůstanou původní parametry.");
+        }
+    }
+
+    private void set() {
+        try {
+            txVykon.setText(Integer.toString(nakladniAutomobil.getVykon()));
+            txMaxRych.setText(Integer.toString(nakladniAutomobil.getMaxRychlost()));
+            checkBoxVyhSed.setSelected(nakladniAutomobil.isMaVyhrivanaSedadla());
+            spPocetPaletovýchmíst.getValueFactory().setValue(nakladniAutomobil.getPocetPaletovychMist());
+            txSPZ.setText(nakladniAutomobil.getSPZ());
+            txVyrobce.setText(nakladniAutomobil.getVyrobce());
+        } catch (NumberFormatException ex) {
+            AlertHandler.errorAlert(null,
+                    "Hodnota nebyla zadáná ve validním tvaru. ");
+        }
+    }
+}

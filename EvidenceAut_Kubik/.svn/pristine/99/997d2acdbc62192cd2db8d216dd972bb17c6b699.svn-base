@@ -1,0 +1,27 @@
+package automobily;
+
+public class Dodavka extends Vozidlo{
+private final int uzitnaHmotnost;
+private final int objemUloznehoProstoru;
+
+    public Dodavka(int uzitnaHmotnost, int objemUloznehoProstoru, String vyrobce, int SPZ, int maxRychlost, boolean vyhrivanaSedadla) {
+        super(VozidloEnum.DODAVKA, vyrobce, SPZ, maxRychlost, vyhrivanaSedadla);
+        this.uzitnaHmotnost = uzitnaHmotnost;
+        this.objemUloznehoProstoru = objemUloznehoProstoru;
+    }
+
+    public int getUzitnaHmotnost() {
+        return uzitnaHmotnost;
+    }
+
+    public int getObjemUloznehoProstoru() {
+        return objemUloznehoProstoru;
+    }
+
+    @Override
+    public String toString() {
+        return super.toString() + ", Užitná hmotnost: " + uzitnaHmotnost + ", Objem úložného prostoru: " + objemUloznehoProstoru + " m^3";
+    }
+
+
+}

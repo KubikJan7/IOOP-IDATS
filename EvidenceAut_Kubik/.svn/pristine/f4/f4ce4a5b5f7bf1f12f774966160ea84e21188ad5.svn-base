@@ -1,0 +1,193 @@
+package kolekce;
+
+import java.util.Iterator;
+import java.util.NoSuchElementException;
+import java.util.Objects;
+import java.util.function.Function;
+
+public class Seznam<E> implements ISeznam<E> {
+
+    private final int velikost;
+    private int pocet;
+    private Prvek<E> prvni;
+    private Prvek<E> posledni;
+    private Prvek<E> predchozi;
+    private Prvek<E> hledany;
+
+    public static class Prvek<E> {
+
+        E data;
+        Prvek dalsi;
+
+        Prvek(Prvek dalsi, E data) {
+            this.dalsi = dalsi;
+            this.data = data;
+
+        }
+
+        Prvek(E data) {
+            this(null, data);
+        }
+    }
+
+    public Seznam(int velikost) throws KolekceException {
+        if (velikost <= 0) {
+            throw new KolekceException("");
+        }
+        this.velikost = velikost;
+        this.pocet = 0;
+        this.prvni = null;
+        this.posledni = null;
+        this.predchozi = null;
+        this.hledany = null;
+    }
+
+    @Override
+    public int getVelikost() {
+        return velikost;
+    }
+
+    @Override
+    public int getPocet() {
+        return pocet;
+    }
+
+    @Override
+    public boolean jePrazdny() {
+        return pocet == 0;
+    }
+
+    @Override
+    public boolean jePlny() {
+        return pocet >= velikost;
+    }
+
+    @Override
+    public void pridej(E data) throws KolekceException {
+        Objects.requireNonNull(data);
+        if (jePlny()) {
+            throw new KolekceException("Dosažena maximální velikost");
+        } else {
+            pocet++;
+            Prvek<E> p = new Prvek<>(data);
+            if (prvni == null) {
+                prvni = p;
+                posledni = prvni;
+                return;
+            }
+            posledni.dalsi = p;
+            posledni = posledni.dalsi;
+        }
+    }
+
+    @Override
+    public E najdi(E klic) {
+        hledany = prvni;
+        while (hledany != null) {
+            if (hledany.data.equals(klic)) {
+                return hledany.data;
+            }
+            hledany = hledany.dalsi;
+        }
+        return null;
+    }
+
+    @Override
+    public E odeber(E klic) {
+        Objects.requireNonNull(klic);
+        if (prvni == null) {
+            return null;
+        }
+        hledany = prvni;
+        while (hledany != null) {
+            if (hledany.data.equals(klic)) {
+                break;
+            }
+            predchozi = hledany;
+            hledany = hledany.dalsi;
+        }
+        E data = null;
+        if (predchozi == posledni) {
+            return null;
+        }
+        data = hledany.data;
+        pocet--;
+        if (predchozi != null) {
+            if (hledany == posledni) {
+                predchozi.dalsi = null;
+                posledni = predchozi;
+            } else {
+                predchozi.dalsi = hledany.dalsi;
+            }
+        } else {
+            zrus();
+        }
+        return data;
+    }
+
+    @Override
+    public void zrus() {
+        prvni = null;
+        posledni = null;
+        pocet = 0;
+    }
+
+    @Override
+    public E[] toArray() {
+        E[] pole = (E[]) new Object[pocet];
+        Prvek<E> p = prvni;
+        for (int i = 0; i < pole.length; i++) {
+            if (p == null) {
+                break;
+            }
+            pole[i] = p.data;
+            p = p.dalsi;
+        }
+        return pole;
+    }
+
+    @Override
+    public E[] toArray(E[] array) throws IllegalArgumentException {
+        if (array.length != pocet) {
+            throw new IllegalArgumentException("Pole nemá validní pocet objektů");
+        }
+        Prvek<E> p = prvni;
+        for (int i = 0; i < array.length; i++) {
+            if (p == null) {
+                break;
+            }
+            array[i] = p.data;
+            p = p.dalsi;
+        }
+        return array;
+    }
+
+    @Override
+    public E[] toArray(Function<Integer, E[]> createFunction) {
+        return toArray(createFunction.apply(pocet));
+    }
+
+    @Override
+    public Iterator<E> iterator() {
+        hledany = prvni;
+        predchozi = null;
+        Iterator<E> itr = new Iterator<E>() {
+            @Override
+            public boolean hasNext() {
+                return hledany != null;
+            }
+
+            @Override
+            public E next() {
+                if (predchozi == null) {
+                    throw new NoSuchElementException();
+                }
+                predchozi = hledany;
+                hledany = hledany.dalsi;
+                return hledany.data;
+            }
+
+        };
+        return itr;
+    }
+}

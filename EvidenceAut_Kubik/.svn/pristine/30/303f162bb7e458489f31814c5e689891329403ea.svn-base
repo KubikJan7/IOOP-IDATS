@@ -1,0 +1,108 @@
+package gui;
+
+import automobily.Dodavka;
+import java.util.function.Consumer;
+import java.util.function.Supplier;
+import javafx.geometry.Insets;
+import javafx.geometry.Pos;
+import javafx.scene.Scene;
+import javafx.scene.control.Button;
+import javafx.scene.control.CheckBox;
+import javafx.scene.control.TextField;
+import javafx.scene.layout.GridPane;
+import javafx.scene.layout.VBox;
+import javafx.stage.Modality;
+import javafx.stage.Stage;
+import javafx.stage.StageStyle;
+
+public class DialogDodavka extends Stage {
+
+    private final Consumer<Dodavka> vystupniOperace;
+    private TextField txVyrobce;
+    private TextField txSPZ;
+    private TextField txMaxRych;
+    private CheckBox checkBoxVyhSed;
+    private TextField txUzitnaHmotnost;
+    private TextField txObjemUloznehoProstoru;
+    private boolean edit;
+    private Dodavka dodavka;
+
+    public static DialogDodavka factoryDialogDodavka(
+            Supplier<Dodavka> vstup, Consumer<Dodavka> vystup) {
+        return new DialogDodavka(vstup, vystup);
+    }
+
+    private DialogDodavka(Supplier<Dodavka> vstup,
+            Consumer<Dodavka> vystup) {
+        this.vystupniOperace = vystup;
+        edit = vstup != null;
+
+        dodavka = (edit) ? vstup.get() : new Dodavka(0, 0, null, null, 0, false);
+        setTitle("Dialog Dodávka");
+        setWidth(350);
+        setHeight(350);
+        initStyle(StageStyle.UTILITY);
+        initModality(Modality.WINDOW_MODAL);
+        setScene(getScena());
+        if (edit) {
+            set();
+        }
+    }
+
+    private Scene getScena() {
+        VBox box = new VBox();
+        box.setAlignment(Pos.CENTER);
+        box.setSpacing(20);
+        GridPane grid = new GridPane();
+        grid.setAlignment(Pos.CENTER);
+        grid.setPadding(new Insets(10));
+        grid.setHgap(10);
+        grid.setVgap(10);
+        box.getChildren().addAll(grid);
+        int radek = 0;
+        txVyrobce = VytvareniKomponent.addRow(grid, "Výrobce:", radek++);
+        txSPZ = VytvareniKomponent.addRow(grid, "SPZ:", radek++);
+        txMaxRych = VytvareniKomponent.addRow(grid, "Max. rych. (km/h):", radek++);
+        checkBoxVyhSed = VytvareniKomponent.addRowCheckBox(grid, "Vyhřívaná sedadla:", radek++);
+        txUzitnaHmotnost = VytvareniKomponent.addRow(grid, "Užitná hmot. (kg):", radek++);
+        txObjemUloznehoProstoru = VytvareniKomponent.addRow(grid, "Objem úlož. prost.", radek++);
+        Button buttonUloz = new Button("Ulož");
+        buttonUloz.setOnAction(e -> {
+            update();
+            vystupniOperace.accept(dodavka);
+            hide();
+        });
+        grid.add(buttonUloz, 0, ++radek);
+        return new Scene(box);
+    }
+
+    private void update() {
+        try {
+            dodavka.setUzitnaHmotnost(Integer.valueOf(txUzitnaHmotnost.getText()));
+            dodavka.setMaxRychlost(Integer.valueOf(txMaxRych.getText()));
+            dodavka.setMaVyhrivanaSedadla(checkBoxVyhSed.isSelected());
+            dodavka.setObjemUloznehoProstoru(Integer.valueOf(txObjemUloznehoProstoru.getText()));
+            dodavka.setSPZ(txSPZ.getText());
+            dodavka.setVyrobce(txVyrobce.getText());
+        } catch (NumberFormatException ex) {
+            AlertHandler.informationAlert(null,
+                    "Některá z hodnot nebyla zadána ve validním tvaru. "
+                    + "Editované položce zůstanou původní parametry, "
+                    + "nově vytvořená položka získá nulové parametry.");
+        }
+    }
+
+    private void set() {
+        try {
+            txUzitnaHmotnost.setText(Integer.toString(dodavka.getUzitnaHmotnost()));
+            txMaxRych.setText(Integer.toString(dodavka.getMaxRychlost()));
+            checkBoxVyhSed.setSelected(dodavka.isMaVyhrivanaSedadla());
+            txObjemUloznehoProstoru.setText(Integer.toString(dodavka.getObjemUloznehoProstoru()));
+            txSPZ.setText(dodavka.getSPZ());
+            txVyrobce.setText(dodavka.getVyrobce());
+        } catch (NumberFormatException ex) {
+            AlertHandler.errorAlert(null,
+                    "Hodnota nebyla zadáná ve validním tvaru. ");
+        }
+    }
+}

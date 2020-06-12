@@ -1,0 +1,25 @@
+
+package gui;
+
+import automobily.Barva;
+import automobily.Dodavka;
+import automobily.NakladniAutomobil;
+import automobily.OsobniAutomobil;
+import javafx.event.ActionEvent;
+import javafx.event.EventHandler;
+
+public class TestData {
+
+    static EventHandler<ActionEvent> runTestData(EvidenceAutomobilu evidenceAutomobilu) {
+        return (ActionEvent event) -> {
+            evidenceAutomobilu.seznam.zrus();
+            evidenceAutomobilu.seznam.pridej(new OsobniAutomobil(Barva.MODRA, 3, "Citroen", "CB55648D", 150, false));
+            evidenceAutomobilu.seznam.pridej(new NakladniAutomobil(80, 200, "Mercedes", "A-468GF635", 110, true));
+            evidenceAutomobilu.seznam.pridej(new Dodavka(1250, 100, "Renault", "P-FD58945DS", 130, true));
+            evidenceAutomobilu.seznam.pridej(new OsobniAutomobil(Barva.CERNA, 5, "Fiat", "CG-4585FD55F", 210, true));
+            evidenceAutomobilu.seznam.pridej(new NakladniAutomobil(100, 294, "Renault", "A-468GF635", 110, true));
+            evidenceAutomobilu.obnovZobrazeniSeznamu();
+        };
+    }
+    
+}

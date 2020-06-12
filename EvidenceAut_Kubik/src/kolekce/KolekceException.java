@@ -1,0 +1,17 @@
+package kolekce;
+
+
+public class KolekceException extends Exception{
+
+    public KolekceException(String message) {
+        super(message);
+    }
+
+    @Override
+    public String toString() {
+        return "KolekceException{" + super.toString() + '}';
+    }
+    
+    
+
+}

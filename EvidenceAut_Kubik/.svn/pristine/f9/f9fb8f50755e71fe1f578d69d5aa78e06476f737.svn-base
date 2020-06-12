@@ -1,0 +1,24 @@
+package automobily;
+
+
+public enum VozidloEnum {
+    
+OSOBNI_AUTOMOBIL("Osobni automobil"), NAKLADNI_AUTOMOBIL("Nakladni Automobil"), DODAVKA("Dodavka");
+
+private final String name;
+
+private VozidloEnum(String name){
+    this.name = name;
+}
+
+    public String getName() {
+        return name;
+    }
+
+    @Override
+    public String toString() {
+        return  name;
+    }
+
+
+}

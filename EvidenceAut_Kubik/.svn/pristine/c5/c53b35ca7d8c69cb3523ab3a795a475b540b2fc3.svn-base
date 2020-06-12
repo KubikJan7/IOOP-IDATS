@@ -1,0 +1,27 @@
+package automobily;
+
+public class NakladniAutomobil extends Vozidlo {
+
+    private final int pocetPaletovychMist;
+    private final int vykon;
+
+    public NakladniAutomobil(int pocetPaletovychMist, int vykon, String vyrobce, int SPZ, int maxRychlost, boolean vyhrivanaSedadla) {
+        super(VozidloEnum.NAKLADNI_AUTOMOBIL, vyrobce, SPZ, maxRychlost, vyhrivanaSedadla);
+        this.pocetPaletovychMist = pocetPaletovychMist;
+        this.vykon = vykon;
+    }
+
+    public int getLoznyProstor() {
+        return pocetPaletovychMist;
+    }
+
+    public int getVykon() {
+        return vykon;
+    }
+
+    @Override
+    public String toString() {
+        return super.toString() + ", Ložný prostor: " + pocetPaletovychMist + ", Výkon: " + vykon + " kW";
+    }
+
+}

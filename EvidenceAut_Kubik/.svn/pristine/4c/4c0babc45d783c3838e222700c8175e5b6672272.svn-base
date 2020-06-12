@@ -1,0 +1,57 @@
+package kolekce;
+
+import automobily.Vozidlo;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import java.util.stream.Stream;
+
+public class SeznamVozidel {
+
+    private static ISeznam seznam;
+    private static SeznamVozidel seznamVozidel = null;
+
+    public static SeznamVozidel getInstance(int velikost) {
+        if (seznamVozidel == null) {
+            try {
+                seznamVozidel = new SeznamVozidel(velikost);
+            } catch (KolekceException ex) {
+                Logger.getLogger(SeznamVozidel.class.getName()).log(Level.SEVERE, null, ex);
+            }
+        }
+        return seznamVozidel;
+    }
+
+    private SeznamVozidel(int velikost) throws KolekceException{
+        seznam = new Seznam<>(velikost);
+    }
+    public void pridej(Vozidlo vozidlo) {
+        try {
+            seznam.pridej(vozidlo);
+        } catch (KolekceException ex) {
+        }
+    }
+
+    public void odeber(Vozidlo vozidlo) {
+            seznam.odeber(vozidlo);
+    }
+    
+    public Stream<Vozidlo> stream(){
+        return seznam.stream();
+    }
+    
+    public void zrus(){
+        seznam.zrus();
+    }
+    
+    public int getPocet(){
+        return seznam.getPocet();
+    }
+    
+    public int getVelikost(){
+        return seznam.getVelikost();
+    }
+    
+    public Object[] toArray(){
+        return seznam.toArray();
+    }
+}

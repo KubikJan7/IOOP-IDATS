@@ -1,0 +1,24 @@
+package gui;
+
+import automobily.Vozidlo;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import kolekce.ISeznam;
+import kolekce.KolekceException;
+import kolekce.Seznam;
+
+public class SeznamVozidel {
+
+    private static ISeznam<Vozidlo> seznam;
+
+    public static ISeznam<Vozidlo> getInstance(int velikost){
+        if (seznam == null) {
+            try {
+                seznam = new Seznam(velikost);
+            } catch (KolekceException ex) {
+                Logger.getLogger(SeznamVozidel.class.getName()).log(Level.SEVERE, null, ex);
+            }
+        }
+        return seznam;
+    }
+}
